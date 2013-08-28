@@ -1,0 +1,54 @@
+﻿@using BooksData.Entities;
+@using BooksData.Repositories;
+@{
+    Layout = "~/_SiteLayout.cshtml";
+    Page.Title = "Books With Migrations";
+    
+    var categories = Enumerable.Empty<SelectListItem>();
+    var books = Enumerable.Empty<Book>();
+    using (var repository = new CategoryRepository()) {
+        categories = repository.GetCategories().Select(c => new SelectListItem {
+            Value = c.CategoryId.ToString(),
+            Text = c.CategoryName,
+            Selected = c.CategoryId == Request["categoryId"].AsInt()
+        });
+    }
+
+    if (IsPost && Request["categoryId"].IsInt()) {
+        using (var repository = new BookRepository()) {
+            books = repository.GetBooksByCategory(Request["categoryId"].AsInt());
+        }
+    }
+}
+
+@section featured {
+<section class="featured">
+    <div class="content-wrapper">
+        <hgroup class="title">
+            <h1>@Page.Title.</h1>
+        </hgroup>
+    </div>
+</section>
+}
+
+<h3>Books</h3>
+
+<form method="post">
+    <fieldset>
+        <legend>Select Category</legend>
+        <div>@Html.DropDownList("categoryId", " --Select Category-- ", categories)</div>
+        <button>Select</button>
+    </fieldset>
+</form>
+@if (books.Any()) {
+    foreach (var book in books) {
+        <div>
+            <h3>@book.Title</h3>
+            Description: @book.Description<br />
+            ISBN: @book.ISBN<br />
+            Publication Date: @book.DatePublished.ToLongDateString()<br />
+            Author: @book.Author.FirstName @book.Author.LastName<br />
+            Category: @book.Category.CategoryName
+        </div>
+    }
+}
